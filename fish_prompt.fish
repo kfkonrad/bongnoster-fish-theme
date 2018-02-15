@@ -13,11 +13,10 @@
 # set -g theme_hide_hostname no
 # set -g default_user your_normal_user
 
-
-
 set -g current_bg NONE
 set segment_separator \uE0B0
 set right_segment_separator \uE0B0
+set -g KFK_VERSIONING ''
 # ===========================
 # Helper methods
 # ===========================
@@ -80,7 +79,11 @@ function prompt_finish -d "Close open segments"
   if [ -n $current_bg ]
     set_color -b normal
     set_color $current_bg
-    echo -n "$segment_separator "
+    if [ $KFK_VERSIONING = '_' ]
+      echo -n " "
+    else
+      echo -n "$segment_separator "
+    end
   end
   set -g current_bg NONE
 end
@@ -92,26 +95,25 @@ end
 
 function prompt_virtual_env -d "Display Python virtual environment"
   if test "$VIRTUAL_ENV"
-    prompt_segment white black (basename $VIRTUAL_ENV)
+    prompt_segment white black
+    echo -n (basename $VIRTUAL_ENV)
   end
 end
 
 function prompt_user -d "Display current user if different from $default_user"
   if [ "$theme_display_user" = "yes" ]
     if [ "$USER" != "$default_user" -o -n "$SSH_CLIENT" ]
-      set USER (whoami)
       get_hostname
       if [ $HOSTNAME_PROMPT ]
         set USER_PROMPT $USER@$HOSTNAME_PROMPT
       else
         set USER_PROMPT $USER
       end
-      prompt_segment black yellow $USER_PROMPT
-    end
-  else
-    get_hostname
-    if [ $HOSTNAME_PROMPT ]
-      prompt_segment black yellow $HOSTNAME_PROMPT
+      if [ "$USER" = "root" ]
+        prompt_segment black red $USER_PROMPT
+      else
+        prompt_segment white black $USER_PROMPT
+      end
     end
   end
 end
@@ -119,12 +121,13 @@ end
 function get_hostname -d "Set current hostname to prompt variable $HOSTNAME_PROMPT if connected via SSH"
   set -g HOSTNAME_PROMPT ""
   if [ "$theme_hide_hostname" = "no" -o \( "$theme_hide_hostname" != "yes" -a -n "$SSH_CLIENT" \) ]
-    set -g HOSTNAME_PROMPT (hostname)
+    set -g HOSTNAME_PROMPT (hostname | cut -d"." -f1)
   end
 end
 
 function prompt_dir -d "Display the current directory"
-  prompt_segment blue black (prompt_pwd)
+  prompt_segment blue black
+  echo -n (prompt_pwd)
 end
 
 
@@ -137,11 +140,17 @@ function prompt_hg -d "Display mercurial state"
       set state (command hg prompt "{status}")
       set branch_symbol \uE0A0
       if [ "$state" = "!" ]
-        prompt_segment red white "$branch_symbol $branch ±"
+        prompt_segment red white
+        echo "$branch_symbol $branch ±"
+        set -g KFK_VERSIONING '_'
       else if [ "$state" = "?" ]
-          prompt_segment yellow black "$branch_symbol $branch ±"
-        else
-          prompt_segment green black "$branch_symbol $branch"
+          prompt_segment yellow black
+          echo "$branch_symbol $branch ±"
+          set -g KFK_VERSIONING '_'
+      else
+          prompt_segment green black
+          echo "$branch_symbol $branch"
+          set -g KFK_VERSIONING '_'
       end
     end
   end
@@ -161,9 +170,13 @@ function prompt_git -d "Display the current git state"
     set branch_symbol \uE0A0
     set -l branch (echo $ref | sed  "s-refs/heads/-$branch_symbol -")
     if [ "$dirty" != "" ]
-      prompt_segment yellow black "$branch $dirty"
+      prompt_segment black yellow
+      echo -n "$branch $dirty"
+      set -g KFK_VERSIONING '_'
     else
-      prompt_segment green black "$branch $dirty"
+      prompt_segment black green
+      echo -n "$branch"
+      set -g KFK_VERSIONING '_'
     end
   end
 end
@@ -176,6 +189,7 @@ function prompt_svn -d "Display the current svn state"
     set branch_symbol \uE0A0
     set revision (svn_get_revision)
     prompt_segment green black "$branch_symbol $branch:$revision"
+    set -g KFK_VERSIONING '_'
   end
 end
 
@@ -205,7 +219,7 @@ function prompt_status -d "the symbols for a non zero exit status, root and back
     # if superuser (uid == 0)
     set -l uid (id -u $USER)
     if [ $uid -eq 0 ]
-      prompt_segment black yellow "⚡"
+      #prompt_segment black yellow "⚡"
     end
 
     # Jobs display
@@ -219,6 +233,7 @@ end
 # ===========================
 
 function fish_prompt
+  set -g KFK_VERSIONING ''
   set -g RETVAL $status
   prompt_status
   prompt_virtual_env
