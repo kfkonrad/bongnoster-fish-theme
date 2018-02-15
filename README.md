@@ -1,4 +1,4 @@
-## agnoster
+## bongnoster
 
 A fish theme optimized for people who use:
 
@@ -10,9 +10,6 @@ A fish theme optimized for people who use:
 * Fish Vi-mode
 
 For Mac users, I highly recommend iTerm 2 + Solarized Dark
-
-![agnoster theme](https://f.cloud.github.com/assets/1765209/255379/452c668e-8c0b-11e2-8a8e-d1d13e57d15f.png)
-
 
 #### Characteristics
 
@@ -29,4 +26,4 @@ You will probably want to disable the default virtualenv prompt. Add to your [`i
 `set --export VIRTUAL_ENV_DISABLE_PROMPT 1`
 * Indicate vi mode.
 
-Ported from https://gist.github.com/agnoster/3712874.
+Adapted from https://github.com/oh-my-fish/theme-agnoster.
