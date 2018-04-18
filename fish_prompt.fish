@@ -24,14 +24,20 @@ set -g KFK_VERSIONING ''
 set -g __fish_git_prompt_showdirtystate 'yes'
 set -g __fish_git_prompt_char_dirtystate '±'
 set -g __fish_git_prompt_char_cleanstate ''
-
+set -g __fish_git_prompt_char_addedstate '•'
 function parse_git_dirty
   set -l submodule_syntax
   set submodule_syntax "--ignore-submodules=dirty"
   set git_dirty (command git status --porcelain $submodule_syntax  2> /dev/null)
+  command git status --porcelain $submodule_syntax  2> /dev/null | command grep -e "^?? " -e "^ M " 2>/dev/null >/dev/null
+  set git_added $status
   if [ -n "$git_dirty" ]
     if [ $__fish_git_prompt_showdirtystate = "yes" ]
-      echo -n "$__fish_git_prompt_char_dirtystate"
+      if [ $git_added = 1 ]
+        echo -n "$__fish_git_prompt_char_addedstate"
+      else
+        echo -n "$__fish_git_prompt_char_dirtystate"
+      end
     end
   else
     if [ $__fish_git_prompt_showdirtystate = "yes" ]
