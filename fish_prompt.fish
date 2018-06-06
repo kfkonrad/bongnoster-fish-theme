@@ -175,14 +175,24 @@ function prompt_git -d "Display the current git state"
     end
     set branch_symbol \uE0A0
     set -l branch (echo $ref | sed  "s-refs/heads/-$branch_symbol -")
-    if [ "$dirty" != "" ]
-      prompt_segment black yellow
-      echo -n "$branch $dirty"
-      set -g KFK_VERSIONING '_'
+    if [ "$KFK_NOBRANCH" = "" ]
+      if [ "$dirty" != "" ]
+        prompt_segment black yellow
+        echo -n "$branch $dirty"
+        set -g KFK_VERSIONING '_'
+      else
+        prompt_segment black green
+        echo -n "$branch"
+        set -g KFK_VERSIONING '_'
+      end
     else
-      prompt_segment black green
-      echo -n "$branch"
-      set -g KFK_VERSIONING '_'
+      if [ "$dirty" != "" ]
+        prompt_segment black yellow
+        echo -n $branch_symbol
+      else
+        prompt_segment black green
+        echo -n $branch_symbol
+      end
     end
   end
 end
@@ -238,7 +248,7 @@ end
 # Apply theme
 # ===========================
 
-function fish_prompt
+function fish_long_prompt
   set -g KFK_VERSIONING ''
   set -g RETVAL $status
   prompt_status
@@ -250,3 +260,40 @@ function fish_prompt
   type -q svn; and prompt_svn
   prompt_finish
 end
+
+function fish_short_prompt
+  set -l fish_prompt_pwd_dir_length_save $fish_prompt_pwd_dir_length
+  set -g fish_prompt_pwd_dir_length 1
+  set -g KFK_VERSIONING ''
+  set -g RETVAL $status
+  prompt_status
+  prompt_virtual_env
+  prompt_user
+  prompt_dir
+  set -g KFK_NOBRANCH _
+  type -q hg;  and prompt_hg
+  type -q git; and prompt_git
+  type -q svn; and prompt_svn
+  prompt_finish
+  set -e KFK_NOBRANCH
+  set -g fish_prompt_pwd_dir_length $fish_prompt_pwd_dir_length_save
+end
+
+
+function fish_prompt
+  set -l long_prompt_output (fish_long_prompt)
+  if [ (string length (string trim (echo -n $long_prompt_output | perl -pe 's/\x1b\[[0-9;]*[mG]//g' ))) -ge $COLUMNS ]
+    fish_short_prompt
+  else
+    echo -n $long_prompt_output
+  end
+end
+
+
+
+
+
+
+
+
+
