@@ -280,10 +280,34 @@ function fish_short_prompt
 end
 
 
+function fish_tiny_prompt
+  set -l fish_prompt_pwd_dir_length_save $fish_prompt_pwd_dir_length
+  set -g fish_prompt_pwd_dir_length 1
+  set -g KFK_VERSIONING ''
+  set -g RETVAL $status
+  prompt_status
+  prompt_virtual_env
+#  prompt_user
+  prompt_dir
+  set -g KFK_NOBRANCH _
+  type -q hg;  and prompt_hg
+  type -q git; and prompt_git
+  type -q svn; and prompt_svn
+  prompt_finish
+  set -e KFK_NOBRANCH
+  set -g fish_prompt_pwd_dir_length $fish_prompt_pwd_dir_length_save
+end
+
+
 function fish_prompt
   set -l long_prompt_output (fish_long_prompt)
   if [ (string length (string trim (echo -n $long_prompt_output | perl -pe 's/\x1b\[[0-9;]*[mG]//g' ))) -ge $COLUMNS ]
-    fish_short_prompt
+    set -l short_prompt_output (fish_short_prompt)
+    if [ (string length (string trim (echo -n $short_prompt_output | perl -pe 's/\x1b\[[0-9;]*[mG]//g' ))) -ge $COLUMNS ]
+      fish_tiny_prompt
+    else
+      echo -n $short_prompt_output
+    end
   else
     echo -n $long_prompt_output
   end
